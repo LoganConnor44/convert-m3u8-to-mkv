@@ -18,19 +18,34 @@ Core logic for the terminal application
 """
 def mainApplication() :
 	parser=argparse.ArgumentParser()
-	parser.add_argument('--input', help='Specifies the input url file stream location that will be targeted.', required=True)
+	parser.add_argument('--input', help='Specifies the input url file stream location that will be targeted.')
+	parser.add_argument('--localFileName', help='Specifies local file name located in the Downloads directory.')
 	parser.add_argument('--output', help='Specifies the name of a output file from the input source.', required=True)
 	parser.add_argument('--path', help='Specifies the where the input file resides and the output file will be created.')
+	
 	args = parser.parse_args()
 
 	print('\n')
 
 	if args.input == None :
-		print("Please provide a URL location for the file you are attempting to convert.")
-		return
+		print("No URL provided. Depending on local file.")
 	else :
-		inputPath = args.input
-		print("Input location: " + inputPath)
+		sourceFile = args.input
+		print("Input location: " + sourceFile)
+
+	if args.localFileName != None :
+		sourceFile = pathlib.Path.home() / 'Downloads' / args.localFileName
+		print("Local file name provided. Will continue using the following file: " + str(sourceFile))
+
+	if args.input == None and args.localFileName == None :
+		print("Please specify a source file. Remote url and a local file was not provided.")
+		print("Exiting program.")
+		return
+
+	if args.input != None and args.localFileName != None :
+		print("Please only specify one target source to encode.")
+		print("Exiting program.")
+		return
 
 	if args.output == None : 
 		output = 'output'
@@ -50,7 +65,7 @@ def mainApplication() :
 	print('\n')
 
 	with yaspin(Spinners.arc, text="Downloading Video", color="blue") as spnr :
-		convertStreamToMkv(inputPath, fullOutputPathWithFileNameAndExtension.as_posix())
+		convertStreamToMkv(sourceFile, fullOutputPathWithFileNameAndExtension.as_posix())
 		spnr.text = "Video Downloaded"
 		spnr.ok("Enjoy!")
 
