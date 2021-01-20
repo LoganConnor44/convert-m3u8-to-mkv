@@ -1,8 +1,8 @@
-import argparse, sys
+import argparse
+import pathlib
 import ffmpeg_streaming
 from yaspin import yaspin
 from yaspin.spinners import Spinners
-import pathlib
 
 """
 @return: None
@@ -19,7 +19,6 @@ Core logic for the terminal application
 def mainApplication() :
 	parser=argparse.ArgumentParser()
 	parser.add_argument('--input', help='Specifies the input url file stream location that will be targeted.')
-	parser.add_argument('--localFileName', help='Specifies local file name located in the Downloads directory.')
 	parser.add_argument('--output', help='Specifies the name of a output file from the input source.', required=True)
 	parser.add_argument('--path', help='Specifies the where the input file resides and the output file will be created.')
 	
@@ -28,24 +27,11 @@ def mainApplication() :
 	print('\n')
 
 	if args.input == None :
-		print("No URL provided. Depending on local file.")
+		print("No URL provided.")
+		print("Exiting program.")
+		return
 	else :
 		sourceFile = args.input
-		print("Input location: " + sourceFile)
-
-	if args.localFileName != None :
-		sourceFile = pathlib.Path.home() / 'Downloads' / args.localFileName
-		print("Local file name provided. Will continue using the following file: " + str(sourceFile))
-
-	if args.input == None and args.localFileName == None :
-		print("Please specify a source file. Remote url and a local file was not provided.")
-		print("Exiting program.")
-		return
-
-	if args.input != None and args.localFileName != None :
-		print("Please only specify one target source to encode.")
-		print("Exiting program.")
-		return
 
 	if args.output == None : 
 		output = 'output'
@@ -54,8 +40,7 @@ def mainApplication() :
 		print("Output file name and extension: " + output)
 
 	if args.path == None : 
-		path = pathlib.Path.home() / 'Downloads'
-		print("Path not specified. Defaulting to macOS downloads.")
+		path = pathlib.Path('/usr/src/app/temp')
 	else : 
 		path = args.path
 
@@ -66,9 +51,14 @@ def mainApplication() :
 
 	with yaspin(Spinners.arc, text="Downloading Video", color="blue") as spnr :
 		convertStreamToMkv(sourceFile, fullOutputPathWithFileNameAndExtension.as_posix())
-		spnr.text = "Video Downloaded"
+		spnr.text = "Video Downloaded To Temporary Location"
 		spnr.ok("Enjoy!")
-
+	
+	print("Please use the command `docker cp name-of-container:" + fullOutputPathWithFileNameAndExtension.as_posix() + " /host/path/target` to copy the file.")
+	print("Once the file is on your host machine, remember to remove the container with the `docker rm container-name-here` command.")
+	print("If you are attempting to then copy the file to another filesystem on the network you may use this to enable ssh copy.")
+	print("First remember to create a folder that you intend to copy into.")
+	print("scp ./new-video-file.mkv account-name@network-location:/media/exfat/media/chinese-videos/new-folder-here/new-video.mkv")
 	return
 
 if __name__ == "__main__" :
